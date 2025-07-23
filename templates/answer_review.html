@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Answer Review - UPSC Mock Exam{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" st                                        {% if loop.index0 == answer.correct_index %}
+                                            <i class="fas fa-check-circle text-success me-2"></i>
+                                        {% elif answer.user_answer and loop.index0 == answer.user_index and answer.user_answer != answer.correct_answer %}="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh;">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: none; border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);">
+                <div class="card-body text-center py-4">
+                    <h1 class="display-6 fw-bold text-primary mb-3">
+                        <i class="fas fa-clipboard-list me-3"></i>Complete Answer Review
+                    </h1>
+                    <p class="lead text-muted mb-0">Detailed breakdown of all questions with correct answers and explanations</p>
+                    <div class="row mt-4">
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="text-success">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                <h4>{{ results.correct }}</h4>
+                                <small>Correct</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="text-danger">
+                                <i class="fas fa-times-circle fa-2x mb-2"></i>
+                                <h4>{{ results.incorrect }}</h4>
+                                <small>Incorrect</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="text-warning">
+                                <i class="fas fa-question-circle fa-2x mb-2"></i>
+                                <h4>{{ results.not_attempted }}</h4>
+                                <small>Not Attempted</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="text-info">
+                                <i class="fas fa-percentage fa-2x mb-2"></i>
+                                <h4>{{ "%.1f"|format(results.percentage) }}%</h4>
+                                <small>Score</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="/results{% if request.args.get('id') %}?id={{ request.args.get('id') }}{% endif %}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Results
+                        </a>
+                        <button onclick="window.print()" class="btn btn-outline-secondary">
+                            <i class="fas fa-print me-2"></i>Print Review
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Answer Legend -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: none; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);">
+                <div class="card-body py-3">
+                    <div class="row text-center">
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <span class="badge bg-success fs-6 py-2 px-3">
+                                <i class="fas fa-check me-2"></i>Correct Answer
+                            </span>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <span class="badge bg-danger fs-6 py-2 px-3">
+                                <i class="fas fa-times me-2"></i>Wrong Answer
+                            </span>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <span class="badge bg-warning fs-6 py-2 px-3">
+                                <i class="fas fa-question me-2"></i>Not Attempted
+                            </span>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <span class="badge bg-info fs-6 py-2 px-3">
+                                <i class="fas fa-bookmark me-2"></i>Marked for Review
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions List -->
+    {% for answer in answers %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card answer-card {% if answer.is_correct %}correct-answer{% elif answer.is_attempted %}wrong-answer{% else %}not-attempted{% endif %}" 
+                 style="border: none; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); transition: all 0.3s ease;">
+                <div class="card-header d-flex justify-content-between align-items-center" 
+                     style="background: {% if answer.is_correct %}linear-gradient(135deg, #d4edda, #c3e6cb){% elif answer.is_attempted %}linear-gradient(135deg, #f8d7da, #f1aeb5){% else %}linear-gradient(135deg, #fff3cd, #fdeaa7){% endif %}; 
+                            border: none; border-radius: 15px 15px 0 0; padding: 1.5rem;">
+                    <div class="d-flex align-items-center">
+                        <span class="badge {% if answer.is_correct %}bg-success{% elif answer.is_attempted %}bg-danger{% else %}bg-warning{% endif %} fs-6 me-3 py-2 px-3">
+                            Q{{ answer.question_num }}
+                        </span>
+                        <span class="badge bg-secondary fs-6 py-2 px-3">{{ answer.subject }}</span>
+                        {% if answer.is_marked %}
+                        <span class="badge bg-info fs-6 ms-2 py-2 px-3">
+                            <i class="fas fa-bookmark me-1"></i>Marked
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="status-icon">
+                        {% if answer.is_correct %}
+                            <i class="fas fa-check-circle text-success fa-2x"></i>
+                        {% elif answer.is_attempted %}
+                            <i class="fas fa-times-circle text-danger fa-2x"></i>
+                        {% else %}
+                            <i class="fas fa-question-circle text-warning fa-2x"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body" style="padding: 2rem;">
+                    <!-- Question -->
+                    <div class="question-section mb-4">
+                        <h5 class="fw-bold text-dark mb-3" style="line-height: 1.6;">{{ answer.question }}</h5>
+                    </div>
+                    
+                    <!-- Options -->
+                    <div class="options-section mb-4">
+                        <div class="row">
+                            {% for option in answer.options %}
+                            <div class="col-md-6 mb-3">
+                                <div class="option-item p-3 rounded-3 
+                                    {% if loop.index0 == (answer.correct_answer | int) - 65 %}correct-option{% endif %}
+                                    {% if answer.user_answer and loop.index0 == (answer.user_answer | int) - 65 and answer.user_answer != answer.correct_answer %}wrong-option{% endif %}"
+                                    style="background: {% if loop.index0 == answer.correct_index %}linear-gradient(135deg, #d4edda, #c3e6cb){% elif answer.user_answer and loop.index0 == answer.user_index and answer.user_answer != answer.correct_answer %}linear-gradient(135deg, #f8d7da, #f1aeb5){% else %}linear-gradient(135deg, #f8f9fa, #e9ecef){% endif %}; 
+                                           border: 2px solid {% if loop.index0 == answer.correct_index %}#28a745{% elif answer.user_answer and loop.index0 == answer.user_index and answer.user_answer != answer.correct_answer %}#dc3545{% else %}#dee2e6{% endif %};">
+                                    
+                                    <div class="d-flex align-items-center">
+                                        <span class="option-label fw-bold me-3 
+                                            {% if loop.index0 == answer.correct_index %}text-success
+                                            {% elif answer.user_answer and loop.index0 == answer.user_index and answer.user_answer != answer.correct_answer %}text-danger
+                                            {% else %}text-secondary{% endif %}"
+                                            style="min-width: 30px; font-size: 1.1rem;">
+                                            {{ ['A', 'B', 'C', 'D'][loop.index0] }}.
+                                        </span>
+                                        <span class="option-text flex-grow-1" style="color: #2c3e50; font-weight: 500;">{{ option }}</span>
+                                        {% if loop.index0 == (answer.correct_answer.charCodeAt(0) - 65) %}
+                                            <i class="fas fa-check-circle text-success fs-5 ms-2"></i>
+                                        {% elif answer.user_answer and loop.index0 == (answer.user_answer.charCodeAt(0) - 65) and answer.user_answer != answer.correct_answer %}
+                                            <i class="fas fa-times-circle text-danger fs-5 ms-2"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Answer Summary -->
+                    <div class="answer-summary p-3 rounded-3" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-left: 5px solid #2196f3;">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <strong class="text-primary">Correct Answer:</strong>
+                                <span class="badge bg-success ms-2 py-2 px-3">{{ answer.correct_answer }}</span>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <strong class="text-primary">Your Answer:</strong>
+                                {% if answer.user_answer %}
+                                    <span class="badge {% if answer.is_correct %}bg-success{% else %}bg-danger{% endif %} ms-2 py-2 px-3">{{ answer.user_answer }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning ms-2 py-2 px-3">Not Attempted</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <strong class="text-primary">Status:</strong>
+                                {% if answer.is_correct %}
+                                    <span class="badge bg-success ms-2 py-2 px-3">
+                                        <i class="fas fa-check me-1"></i>Correct
+                                    </span>
+                                {% elif answer.is_attempted %}
+                                    <span class="badge bg-danger ms-2 py-2 px-3">
+                                        <i class="fas fa-times me-1"></i>Wrong
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning ms-2 py-2 px-3">
+                                        <i class="fas fa-question me-1"></i>Skipped
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <strong class="text-primary">Explanation:</strong>
+                            <p class="mb-0 mt-1" style="color: #2c3e50;">{{ answer.explanation }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Back to Top Button -->
+    <div class="text-center mt-5">
+        <a href="#" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;" 
+           class="btn btn-primary btn-lg rounded-circle" 
+           style="width: 60px; height: 60px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);">
+            <i class="fas fa-arrow-up fa-lg"></i>
+        </a>
+    </div>
+</div>
+
+<style>
+/* Additional styles for answer review */
+.answer-card {
+    transition: all 0.3s ease;
+}
+
+.answer-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.option-item {
+    transition: all 0.3s ease;
+}
+
+.option-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+@media print {
+    .btn, .navbar, .back-to-top {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+    
+    .container-fluid {
+        background: white !important;
+    }
+}
+</style>
+{% endblock %}

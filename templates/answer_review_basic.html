@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Answer Review - UPSC Mock Exam{% endblock %}
+
+{% block content %}
+<style>
+    .question-text {
+        color: #000 !important;
+        font-weight: 500;
+    }
+    
+    .option-text {
+        color: #000 !important;
+    }
+    
+    .answer-explanation {
+        color: #000 !important;
+    }
+    
+    .card-text {
+        color: #000 !important;
+    }
+    
+    /* Override any inherited text colors */
+    .card-body p {
+        color: #000 !important;
+    }
+    
+    .card-body span {
+        color: #000 !important;
+    }
+</style>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>Complete Answer Review
+                    </h1>
+                </div>
+                <div class="card-body">
+                    <!-- Summary Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            <div class="text-success">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                                <h4>{{ results.correct }}</h4>
+                                <small>Correct</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="text-danger">
+                                <i class="fas fa-times-circle fa-2x"></i>
+                                <h4>{{ results.incorrect }}</h4>
+                                <small>Incorrect</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="text-warning">
+                                <i class="fas fa-question-circle fa-2x"></i>
+                                <h4>{{ results.not_attempted }}</h4>
+                                <small>Not Attempted</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="text-info">
+                                <i class="fas fa-percentage fa-2x"></i>
+                                <h4>{{ "%.1f"|format(results.percentage) }}%</h4>
+                                <small>Score</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation -->
+                    <div class="text-center mb-4">
+                        <a href="/results{% if request.args.get('id') %}?id={{ request.args.get('id') }}{% endif %}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Results
+                        </a>
+                        <button onclick="window.print()" class="btn btn-secondary ms-2">
+                            <i class="fas fa-print me-2"></i>Print Review
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions -->
+    {% for answer in answers %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-{% if answer.is_correct %}success{% elif answer.is_attempted %}danger{% else %}warning{% endif %}">
+                <div class="card-header bg-{% if answer.is_correct %}success{% elif answer.is_attempted %}danger{% else %}warning{% endif %} text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Question {{ answer.question_num }} - {{ answer.subject }}</h5>
+                        <div>
+                            {% if answer.is_correct %}
+                                <span class="badge bg-light text-success">Correct</span>
+                            {% elif answer.is_attempted %}
+                                <span class="badge bg-light text-danger">Incorrect</span>
+                            {% else %}
+                                <span class="badge bg-light text-warning">Not Attempted</span>
+                            {% endif %}
+                            {% if answer.is_marked %}
+                                <span class="badge bg-info ms-1">Marked</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Question Text -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold">Question:</h6>
+                        <p class="question-text">{{ answer.question }}</p>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold">Options:</h6>
+                        {% for option in answer.options %}
+                        {% set option_letter = 'ABCD'[loop.index0] %}
+                        <div class="mb-2">
+                            <div class="border rounded p-2 
+                                        {% if option_letter == answer.correct_answer %}border-success bg-success bg-opacity-10{% elif option_letter == answer.user_answer and answer.user_answer != answer.correct_answer %}border-danger bg-danger bg-opacity-10{% endif %}">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-{% if option_letter == answer.correct_answer %}success{% elif option_letter == answer.user_answer and answer.user_answer != answer.correct_answer %}danger{% else %}secondary{% endif %} me-2">
+                                        {{ option_letter }}
+                                    </span>
+                                    <span class="option-text">{{ option }}</span>
+                                    {% if option_letter == answer.correct_answer %}
+                                        <i class="fas fa-check-circle text-success ms-auto"></i>
+                                    {% elif option_letter == answer.user_answer and answer.user_answer != answer.correct_answer %}
+                                        <i class="fas fa-times-circle text-danger ms-auto"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Answer Summary -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="alert alert-success">
+                                <strong class="option-text">Correct Answer:</strong> <span class="option-text">Option {{ answer.correct_answer }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-{% if answer.is_correct %}success{% elif answer.is_attempted %}danger{% else %}warning{% endif %}">
+                                <strong class="option-text">Your Answer:</strong> <span class="option-text">{% if answer.user_answer %}Option {{ answer.user_answer }}{% else %}Not Attempted{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Explanation -->
+                    <div class="alert alert-info">
+                        <h6 class="fw-bold">Explanation:</h6>
+                        <p class="mb-0 answer-explanation">{{ answer.explanation }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Final Navigation -->
+    <div class="row mt-4 mb-5">
+        <div class="col-12 text-center">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Review Complete</h5>
+                    <p class="text-muted">You have reviewed all {{ total_questions }} questions</p>
+                    <a href="/results{% if request.args.get('id') %}?id={{ request.args.get('id') }}{% endif %}" class="btn btn-primary me-2">
+                        <i class="fas fa-chart-bar me-2"></i>View Results Summary
+                    </a>
+                    <a href="/" class="btn btn-outline-primary">
+                        <i class="fas fa-home me-2"></i>Take Another Exam
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

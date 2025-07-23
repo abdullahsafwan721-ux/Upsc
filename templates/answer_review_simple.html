@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Answer Review - UPSC Mock Exam{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Answer Review</h1>
+    
+    <div class="alert alert-info">
+        <p>Total Questions: {{ total_questions }}</p>
+        <p>Results Data Available: {{ results is not none }}</p>
+        <p>Number of Answers: {{ answers|length }}</p>
+    </div>
+    
+    {% if answers %}
+        {% for answer in answers[:5] %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Question {{ answer.question_num }}</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ answer.question }}</p>
+                <p><strong>Correct Answer:</strong> {{ answer.correct_answer }}</p>
+                <p><strong>Your Answer:</strong> {{ answer.user_answer or 'Not Attempted' }}</p>
+                <p><strong>Is Correct:</strong> {{ answer.is_correct }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-warning">No answers to display</div>
+    {% endif %}
+    
+    <a href="/results?id={{ request.args.get('id') }}" class="btn btn-primary">Back to Results</a>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Answer Review Debug - UPSC Mock Exam{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Answer Review Debug Page</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Debug Information</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Total Questions:</strong> {{ total_questions }}</p>
+            <p><strong>Results Available:</strong> {{ results is not none }}</p>
+            <p><strong>Number of Answers:</strong> {{ answers|length }}</p>
+            
+            {% if results %}
+            <h6>Results Summary:</h6>
+            <ul>
+                <li>Correct: {{ results.correct }}</li>
+                <li>Incorrect: {{ results.incorrect }}</li>
+                <li>Not Attempted: {{ results.not_attempted }}</li>
+                <li>Percentage: {{ results.percentage }}%</li>
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if answers %}
+        <h2>Questions and Answers (First 3)</h2>
+        {% for answer in answers[:3] %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Question {{ answer.question_num }} - {{ answer.subject }}</h5>
+                <small>
+                    Correct: {{ answer.is_correct }} | 
+                    Attempted: {{ answer.is_attempted }} | 
+                    Marked: {{ answer.is_marked }}
+                </small>
+            </div>
+            <div class="card-body">
+                <h6>Question:</h6>
+                <p>{{ answer.question }}</p>
+                
+                <h6>Options:</h6>
+                <ol type="A">
+                    {% for option in answer.options %}
+                    <li>{{ option }}</li>
+                    {% endfor %}
+                </ol>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Correct Answer:</strong> {{ answer.correct_answer }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Your Answer:</strong> {{ answer.user_answer or 'Not Attempted' }}
+                    </div>
+                </div>
+                
+                <div class="mt-2">
+                    <strong>Explanation:</strong> {{ answer.explanation }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if answers|length > 3 %}
+        <div class="alert alert-info">
+            ... and {{ answers|length - 3 }} more questions
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-warning">
+            <h4>No Answers Found!</h4>
+            <p>The answers array is empty. This indicates an issue with data processing.</p>
+        </div>
+    {% endif %}
+    
+    <a href="/" class="btn btn-primary">Back to Home</a>
+</div>
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Question {{ current_question }} - UPSC Mock Exam{% endblock %}
+
+{% block navbar %}
+<div class="navbar-nav ms-auto">
+    <div class="nav-item me-3">
+        <div id="exam-progress" class="navbar-text small">
+            <div class="progress" style="width: 200px; height: 8px;">
+                <div class="progress-bar" id="progressBar" role="progressbar" 
+                     style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="mt-1">
+                <span id="progressText">0/{{ total_questions }} Questions Answered</span>
+            </div>
+        </div>
+    </div>
+    <div class="nav-item">
+        <span class="navbar-text timer" id="timer">
+            <i class="fas fa-clock me-1"></i>01:30:00
+        </span>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3" data-current-question="{{ current_question }}" data-total-questions="{{ total_questions }}">
+    <div class="row">
+        <!-- Question Navigation Panel -->
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list-ol me-2"></i>Question Navigation
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="question-nav" id="questionNav">
+                        <div class="row g-2">
+                            {% for i in range(1, total_questions + 1) %}
+                            <div class="col-2">
+                                <button class="btn question-nav-btn {% if i == current_question %}current{% endif %}" 
+                                        data-question="{{ i }}">
+                                    {{ i }}
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="legend">
+                            <small>
+                                <div class="mb-2"><span class="badge attempted me-2" style="width: 15px; height: 15px;"></span>Attempted</div>
+                                <div class="mb-2"><span class="badge not-attempted me-2" style="width: 15px; height: 15px;"></span>Not Attempted</div>
+                                <div class="mb-2"><span class="badge marked-for-review me-2" style="width: 15px; height: 15px;"></span>Marked for Review</div>
+                                <div class="mb-2"><span class="badge current me-2" style="width: 15px; height: 15px;"></span>Current</div>
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Keyboard Shortcuts Help -->
+                    <div class="mt-3 pt-3 border-top">
+                        <h6 class="small text-muted">
+                            <i class="fas fa-keyboard me-1"></i>Keyboard Shortcuts:
+                        </h6>
+                        <small class="text-muted">
+                            <div>1-4: Select options A-D</div>
+                            <div>← →: Navigate questions</div>
+                            <div>M: Mark for review</div>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Panel -->
+        <div class="col-lg-9">
+            <div class="card question-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>Question {{ current_question }} of {{ total_questions }}
+                    </h6>
+                    <div>
+                        <span class="badge bg-info me-2">{{ question.subject }}</span>
+                        <span class="badge bg-secondary">2 Marks</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="question-content">
+                        <h5 class="question-number">Question {{ current_question }}:</h5>
+                        <p class="question-text">{{ question.question | safe }}</p>
+                    </div>
+                    
+                    <div class="options-container">
+                        <form id="examForm" method="post">
+                            <input type="hidden" name="current_question" value="{{ current_question }}">
+                            <input type="hidden" id="totalQuestions" value="{{ total_questions }}">
+                            {% for option in question.options %}
+                            {% set option_letter = ['A', 'B', 'C', 'D'][loop.index0] %}
+                            <label class="option-label" for="option_{{ option_letter }}">
+                                <input type="radio" 
+                                       id="option_{{ option_letter }}"
+                                       name="answer" 
+                                       value="{{ option_letter }}"
+                                       {% if user_answer == option_letter %}checked{% endif %}>
+                                <span><strong>{{ option_letter }}.</strong> {{ option }}</span>
+                            </label>
+                            {% endfor %}
+                        </form>
+                    </div>
+                    
+                    <!-- Answer Status -->
+                    <div class="mt-3 text-center">
+                        <div id="answer-status" class="text-muted small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span id="statusText">
+                                {% if user_answer %}
+                                    Answer saved: Option {{ user_answer }}
+                                {% else %}
+                                    Select an option to save your answer
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-warning w-100" id="markForReviewBtn">
+                                <i class="fas fa-star me-2"></i>Mark for Review
+                            </button>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <small class="text-muted">
+                                Use ← → keys to navigate
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary flex-fill" id="prevBtn" 
+                                        {% if current_question == 1 %}disabled{% endif %}>
+                                    <i class="fas fa-chevron-left me-1"></i>Previous
+                                </button>
+                                <button class="btn btn-primary flex-fill" id="nextBtn">
+                                    {% if current_question == total_questions %}
+                                        <i class="fas fa-check me-1"></i>Finish
+                                    {% else %}
+                                        Next<i class="fas fa-chevron-right ms-1"></i>
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Exam Button -->
+            <div class="text-center mt-4">
+                <button class="btn btn-danger btn-lg px-5" id="submitBtn">
+                    <i class="fas fa-paper-plane me-2"></i>Submit Exam
+                </button>
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt me-1"></i>Your answers are automatically saved
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Submit Confirmation Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submitModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Exam Submission
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Important:</strong> Once submitted, you cannot make any changes to your answers.
+                </div>
+                
+                <p class="mb-3">Please review your exam summary before final submission:</p>
+                <div id="submissionSummary"></div>
+                
+                <div class="mt-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmSubmission">
+                        <label class="form-check-label" for="confirmSubmission">
+                            I confirm that I want to submit my exam and understand that this action cannot be undone.
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger btn-confirm-submit" onclick="confirmSubmit()" disabled>
+                    <i class="fas fa-paper-plane me-2"></i>Submit Exam
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Enable submit button when checkbox is checked
+document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('confirmSubmission');
+    const submitBtn = document.querySelector('.btn-confirm-submit');
+    
+    if (checkbox && submitBtn) {
+        checkbox.addEventListener('change', function() {
+            submitBtn.disabled = !this.checked;
+        });
+    }
+});
+</script>
+{% endblock %}
