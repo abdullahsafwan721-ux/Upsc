@@ -697,4 +697,7 @@ def answer_review():
         return render_template('error.html'), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    # Use environment variable for port (Railway will set this)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
